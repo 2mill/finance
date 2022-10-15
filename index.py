@@ -70,26 +70,59 @@ state = State()
 
 
 class LineItemType(Enum):
-	variable=0
-	fixed=1
-	intermittent=2
-	discretionary=3
+	unknown= {
+		'id': -1,
+		'description': 'unkown',
+	}
+	variable={
+		'id': 0,
+		'description': 'variable',
+	}
+	fixed={
+		'id': 1,
+		'description': 'fixed',
+	}
+	intermittent={
+		'id': 2,
+		'description': 'intermittent',
+	}
+	discretionary={
+		'id':3,
+		'description':'discretionary'
+	}
 
-class ExportType(Enum):
-	csv='csv'
+		
+
+
+resolver: dict[str, LineItemType] = {
+	'variable': LineItemType.variable,
+	'fixed': LineItemType.fixed,
+	'intermittent': LineItemType.intermittent,
+	'discretionary': LineItemType.discretionary
+}
+
+category_line_item_map: dict[str, LineItemType] = {
+	'groceries': resolver['variable'],
+	'rent': resolver['fixed']
+}
+
 class LineItem:
+	name: str
+	amount: float
+	category: str
 	line_item_type: LineItemType
-	def __init__(self, name: str, amount: float, identifier: str, line_type: LineItemType):
+	def __init__(self, name: str, amount: float, category: str, line_type: Optional[LineItemType]):
 		self.name = name
 		self.amount = amount
-		self.identifier = identifier
+		self.category = category
 		self.line_item_type = line_type
+
 	def __str__(self) -> str:
 		return '{},{},{},{}'.format(
 			self.name,
 			self.amount,
-			self.identifier,
-			self.line_item_type
+			self.category,
+			self.line_item_type.value['description']
 		)
 
 
@@ -99,15 +132,20 @@ if args.record:
 	source = args.record[2]
 	line_type = args.record[3]
 
+
+	line_type = resolver.get(line_type)
+	line_type = LineItemType.unknown if not line_type else line_type
+
 	line_item = LineItem(
 		name,
 		amount,
 		source,
-		#TODO Command resolver
-		LineItemType.variable
+		line_type
 	)
+
+
 	state.init_data('spending')
 	state.find('spending')
 	with open(state.find('spending'), 'a') as f:
-		f.write(str(line_item))
+		print(str(line_item), file=f)
 	f.close()
