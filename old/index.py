@@ -127,6 +127,8 @@ class LineItem:
 
 
 if args.record:
+
+	## Fix escape commas.
 	name = args.record[0]
 	amount = args.record[1]
 	source = args.record[2]
